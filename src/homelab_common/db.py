@@ -25,6 +25,8 @@ def _connect_args(settings: CommonSettings) -> dict[str, dict[str, str]]:
 def init(settings: CommonSettings) -> None:
     """Create the engine and session factory from settings; once per process."""
     global _engine, _sessionmaker
+    from homelab_common import telemetry
+
     if _engine is not None:
         raise RuntimeError("db.init() already called")
     _engine = create_async_engine(
@@ -34,6 +36,8 @@ def init(settings: CommonSettings) -> None:
         connect_args=_connect_args(settings),
     )
     _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
+    # No-op unless telemetry.setup() ran first.
+    telemetry.instrument_engine(_engine)
 
 
 @asynccontextmanager
