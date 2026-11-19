@@ -52,7 +52,8 @@ later), the hub Activity page, per-service designs.
   host network (only `android`, for adb) declare `run.network: host` in `service.yaml`.
 - **Caddy** is the only published port: `127.0.0.1:8480`, on the `homelab` bridge, published to the tailnet
   as the Tailscale Service `svc` (`tailscale serve --service=svc:svc --https=443 127.0.0.1:8480`, Service
-  defined once in the admin console). Global options: `servers { trusted_proxies static 127.0.0.1 }`.
+  defined once in the admin console). Global options: `servers { trusted_proxies static 172.29.0.1 }` (through the published port Caddy sees
+  the bridge gateway as the peer, not 127.0.0.1; decided with Nav 2026-11-20 after testing).
   One file per service, generated (section 6). Existing `svc:<app>` serve entries stay until each app moves.
 - **Hermes** (on the host) reaches services through Caddy at `https://svc.fin-alkaline.ts.net/<name>/mcp`
   (only the tailnet path carries Tailscale's signed `Tailscale-User-*` headers).
