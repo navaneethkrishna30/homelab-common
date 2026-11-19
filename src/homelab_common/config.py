@@ -22,6 +22,10 @@ class CommonSettings(BaseSettings):
     # argument (values come from the environment and YAML).
     service_name: str = Field(default=...)
     public_path: str = Field(default=...)
+    # The only host the MCP endpoint accepts: the mcp SDK's DNS-rebinding
+    # protection rejects every other Host header with 421, which is what Caddy
+    # forwards behind the Tailscale Service.
+    public_host: str = "svc.fin-alkaline.ts.net"
     database_host: str = Field(default=...)
     database_port: int = 5432
     database_name: str = "homelab"
