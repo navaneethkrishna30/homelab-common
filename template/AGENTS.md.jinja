@@ -1,0 +1,15 @@
+# {{ name }}: agent guide
+
+- Repo card: Cortex `entities/{{ name }}` (create it with the service); map: this file until a `docs/` map exists.
+- Code rules for every agent: Cortex `docs/skills/repo-hygiene` (read it; it is not copied here).
+- Platform and library: [homelab-common](https://github.com/navaneethkrishna30/homelab-common) `SPEC.md`.
+- Branches: `main` released and tagged, `dev` integration, work branches from `dev`.
+
+## Layout
+`src/{{ package }}/`: `app.py` (create_app), `settings.py`, `models.py` (tables and API payloads), `api.py` (REST),
+`tools.py` (MCP tools, also plain functions). `migrations/` Alembic, forward only; `config/config.yaml` tunables.
+
+## Commands
+`just` is not installed; run it as `uvx --from rust-just just <recipe>`.
+- `check`: sync, lint, types, test, validate (service.yaml), secrets-guard
+- New migration: `uv run alembic revision --autogenerate -m "<what>"` (needs a database), review it, commit it.

@@ -1,0 +1,43 @@
+_subdirectory: template
+_templates_suffix: .jinja
+_min_copier_version: "9.4"
+_tasks:
+  - uv lock
+# repo-owned: created once, never overwritten by `copier update` (SPEC section 9)
+_skip_if_exists:
+  - service.yaml
+  - config/config.yaml
+  - README.md
+  - AGENTS.md
+  - src/**
+  - tests/test_*.py
+  - migrations/versions/**
+
+name:
+  type: str
+  help: Service name (a DNS label; also the schema, role, Caddy prefix and MCP key)
+  validator: >-
+    {% if not (name | regex_search('^[a-z]([a-z0-9-]{0,38}[a-z0-9])?$')) %}
+    must be a DNS label: lower-case letters, digits and dashes
+    {% endif %}
+title:
+  type: str
+  help: Human title
+description:
+  type: str
+  help: One line, what the service does
+repo:
+  type: str
+  help: GitHub owner/name
+  default: "navaneethkrishna30/{{ name }}"
+age_recipient:
+  type: str
+  help: Public age key (age1...) the repo's secrets are encrypted to
+library_tag:
+  type: str
+  help: homelab-common tag this service installs (the template's own version)
+  default: v0.1.0
+package:
+  type: str
+  default: "{{ name | replace('-', '_') }}"
+  when: false

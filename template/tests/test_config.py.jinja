@@ -1,0 +1,8 @@
+from homelab_common import load_config
+
+from {{ package }}.settings import Settings
+
+
+def test_config_yaml_is_valid() -> None:
+    """A typo in config/config.yaml fails here, not at deploy."""
+    load_config(Settings)

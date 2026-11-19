@@ -1,0 +1,16 @@
+# {{ title }}
+
+{{ description }}
+
+A homelab service built on [homelab-common](https://github.com/navaneethkrishna30/homelab-common)
+(`{{ library_tag }}`). REST at `https://svc.fin-alkaline.ts.net/{{ name }}/`, MCP at `/{{ name }}/mcp`.
+
+## Develop
+See [AGENTS.md](AGENTS.md). `uvx --from rust-just just check` must pass.
+
+## Secrets
+Values live in `secrets.enc.env` (SOPS, age; recipient in `.sops.yaml`). Add one with
+`sops set secrets.enc.env '["DATABASE_PASSWORD"]' '"<value>"'`; names are listed in `service.yaml` (`run.env`).
+
+## Release
+Merge `dev` into `main`, tag `main` (`vX.Y.Z`), then bump the tag for `{{ name }}` in the homelab repo's `veronica.yaml`.

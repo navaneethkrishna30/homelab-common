@@ -1,0 +1,30 @@
+name: {{ name }}
+
+x-service: &service
+  build: .
+  image: homelab/{{ name }}:local
+  pull_policy: build
+  networks:
+    - homelab
+  env_file:
+    - ${HOMELAB_DIR:-/home/veronica/homelab}/generated/env/{{ name }}.env
+    - /run/homelab/secrets/{{ name }}.env
+  read_only: true
+  tmpfs:
+    - /tmp
+
+services:
+  api:
+    <<: *service
+    container_name: {{ name }}
+    restart: always
+
+  migrate:
+    <<: *service
+    profiles: [tools]
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+networks:
+  homelab:
+    external: true

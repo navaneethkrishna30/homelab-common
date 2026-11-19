@@ -1,0 +1,16 @@
+apiVersion: homelab/v1
+name: {{ name }}
+title: {{ title }}
+description: {{ description }}
+repo: {{ repo }}
+run:
+  port: 8000
+  network: homelab
+  env: [DATABASE_PASSWORD]
+database: {schema: {{ package }}}
+gateway: {path: /{{ name }}}
+mcp:
+  enabled: true
+  path: /mcp
+telemetry: {otlp: true}
+boot: {heal: true, units: []}
