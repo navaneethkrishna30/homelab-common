@@ -11,6 +11,9 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.1.9",
 ]
 
+[project.scripts]
+homelab-common = "homelab_common.cli:main"
+
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
 build-backend = "uv_build"
