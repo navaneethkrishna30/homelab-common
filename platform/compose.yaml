@@ -1,0 +1,31 @@
+# homelab-common platform stack (SPEC section 3). Deployed by the homelab repo's deploy.sh.
+name: homelab-platform
+
+services:
+  postgres:
+    image: postgres:17.12
+    network_mode: host # reachable at 127.0.0.1:5432 and 172.29.0.1:5432 (the homelab bridge gateway)
+    user: "1000:1000"
+    restart: always
+    command:
+      - postgres
+      - -c
+      - listen_addresses=127.0.0.1,172.29.0.1
+      - -c
+      - port=5432
+      - -c
+      - timezone=UTC # Langfuse shares this server and requires UTC
+      - -c
+      - log_timezone=UTC
+    env_file: /run/homelab/secrets/platform.env # provides POSTGRES_PASSWORD
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: homelab
+    volumes:
+      - ${HOMELAB_PG_DATA:-/home/veronica/.local/state/homelab-postgres}:/var/lib/postgresql/data:z
+      - ./sql:/docker-entrypoint-initdb.d:ro,z
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
