@@ -3,6 +3,11 @@ name = "homelab-common"
 version = "0.1.0"
 description = "Shared base for Nav's homelab services"
 requires-python = ">=3.14"
+dependencies = [
+    "pydantic>=2.14.4",
+    "pydantic-settings>=2.16.3",
+    "pyyaml>=6.0.3",
+]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
@@ -12,7 +17,14 @@ build-backend = "uv_build"
 module-name = "homelab_common"
 
 [dependency-groups]
-dev = ["ruff", "pyright", "pytest", "pytest-asyncio", "httpx"]
+dev = [
+    "ruff",
+    "pyright",
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "types-pyyaml>=6.0.12.20261113",
+]
 
 [tool.ruff]
 line-length = 100
