@@ -29,3 +29,22 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+
+  caddy:
+    image: caddy:2.11
+    restart: always
+    networks:
+      - homelab
+    ports:
+      - "127.0.0.1:8480:8480" # the only published port in the platform (SPEC section 3)
+    volumes:
+      - ${HOMELAB_DIR:-/home/veronica/homelab}/caddy:/etc/caddy:ro,z
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8480/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  homelab:
+    external: true

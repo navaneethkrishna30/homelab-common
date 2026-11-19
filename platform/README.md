@@ -10,4 +10,8 @@ join it in later steps.
   Every file is idempotent because deploy applies the same files again on each run: `00-databases.sql` creates the
   `langfuse` database, `10-common.sql` creates the `common` schema, `common.audit` and the read-only role `jarvis_ro`.
   Per-service roles and schemas are generated per service by the homelab repo, not written here.
+- **caddy**: the gateway, `caddy:2.11`, on the `homelab` bridge with the platform's only published port
+  `127.0.0.1:8480`. It reads `/etc/caddy` from `~/homelab/caddy` (set `HOMELAB_DIR` to use another directory): the
+  hand-written `Caddyfile` there imports the generated `sites.d/<name>.caddy`, one per service. The healthcheck
+  fetches `/health` with the image's busybox `wget`.
 - Needs the external Docker network `homelab` (172.29.0.0/24, gateway 172.29.0.1) to exist before the stack starts.
