@@ -5,20 +5,16 @@ import importlib
 import pytest
 from fastmcp import Client
 from fastmcp.exceptions import ToolError
-from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     Histogram,
     HistogramDataPoint,
     InMemoryMetricReader,
 )
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-from opentelemetry.trace import SpanKind, set_tracer_provider
+from opentelemetry.trace import SpanKind
 from pydantic import BaseModel
 
-from homelab_common import CommonSettings, context, telemetry, tool
+from homelab_common import CommonSettings, context, tool
 from homelab_common.tool import mcp_server
 
 
@@ -52,24 +48,9 @@ async def plain() -> Sum:
     return Sum(total=0)
 
 
-@pytest.fixture(autouse=True, scope="module")
-def spans() -> InMemorySpanExporter:
-    # The wrapper emits through the process-global OTel API, so the providers
-    # with in-memory exporters are set once here. Nothing else in the suite
-    # sets globals (set_*_provider is once-only per process), and no provider
-    # is ever shut down, so the suite order cannot matter.
-    exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    set_tracer_provider(provider)
-    return exporter
-
-
-@pytest.fixture(autouse=True, scope="module")
-def metric_reader() -> InMemoryMetricReader:
-    reader = InMemoryMetricReader()
-    set_meter_provider(MeterProvider(metric_readers=[reader], views=list(telemetry.metric_views())))
-    return reader
+# The process-global OTel providers behind the `spans` and `metric_reader`
+# fixtures now live in tests/conftest.py: set_*_provider is once-only, and
+# test_app needs the same globals, so one session-wide pair serves the suite.
 
 
 def operation_points(reader: InMemoryMetricReader) -> list[HistogramDataPoint]:
