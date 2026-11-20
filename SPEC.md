@@ -98,7 +98,7 @@ async def add_task(title: str, due: date | None = None) -> TaskOut:
 
 | Module | v1 contents |
 |---|---|
-| `create_app` | FastAPI app with `/health` (process up) and `/ready` (database reachable, migrations current), JSON logging, OpenTelemetry (section 8), caller/device/trace middleware, FastMCP mounted at `/mcp` beside REST, the given routers and tools |
+| `create_app` | `background=[...]` loops started with the app (android's lease reaper, mifitness's schedule); FastAPI app with `/health` (process up) and `/ready` (database reachable, migrations current), JSON logging, OpenTelemetry (section 8), caller/device/trace middleware, FastMCP mounted at `/mcp` beside REST, the given routers and tools |
 | `load_config` | pydantic-settings model from `config/config.yaml` + environment, `extra="forbid"` |
 | `db` | async SQLAlchemy 2.0 engine and session factory (asyncpg), pool sized from settings, schema = service name |
 | `audit` | `record(...)`, `changes(before, after)`, the `AuditEvent` model (section 7) |
@@ -402,4 +402,6 @@ Each step is one or more cards for `builder`, reviewed by Claude, merged to `dev
   third-party stacks as they were. `secrets.sh` is not retired (that waits for a SOPS restore drill).
 - **Not built (no consumer yet):** the service-to-service HTTP client with the caller header and `traceparent`.
 - **Crash safety** (power cut, OOM): see `platform/README.md`; tested with `kill -9` of every process.
-
+- **Background loops** (2026-11-20, for `android` and `mifitness`): `create_app(..., background=[fn])` runs each async
+  loop for the app's life; one that raises is logged and restarted after 60 s. Schedules live in the service, not in host timers.
+- **Leases** live in the `android` service (its `leases` table and REST/MCP), not in this library: it is their only owner.

@@ -1,9 +1,10 @@
 """The service app: create_app wires config, database, audit, telemetry, REST and MCP."""
 
+import asyncio
 import logging
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
@@ -51,12 +52,37 @@ class Ready(BaseModel):
     reason: str | None = None
 
 
-@asynccontextmanager
-async def _lifespan(app: Starlette) -> AsyncGenerator[None]:
-    """Take down what create_app set up; the app passes itself in on entry."""
-    yield
-    await db.dispose()
-    await telemetry.shutdown()
+Background = Callable[[], Awaitable[None]]
+
+
+def _lifespan_with(
+    background: Sequence[Background],
+) -> Callable[[Starlette], AbstractAsyncContextManager[None]]:
+    @asynccontextmanager
+    async def lifespan(app: Starlette) -> AsyncGenerator[None]:
+        """Run the background loops while the app serves; then take down what create_app set up."""
+        tasks = [asyncio.create_task(_guarded(job), name=job.__name__) for job in background]
+        yield
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        await db.dispose()
+        await telemetry.shutdown()
+
+    return lifespan
+
+
+async def _guarded(job: Background) -> None:
+    """A background loop that raises is logged and started again a minute later, never left dead."""
+    while True:
+        try:
+            await job()
+            return
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("background job %s failed; restarting in 60 s", job.__name__)
+            await asyncio.sleep(60)
 
 
 def create_app(
@@ -65,16 +91,20 @@ def create_app(
     *,
     routers: Sequence[APIRouter],
     tools: Sequence[Callable[..., Awaitable[object]]],
+    background: Sequence[Background] = (),
 ) -> FastAPI:
-    """Build one service app (SPEC section 4): the routers as REST, the tools as MCP."""
+    """Build one service app (SPEC section 4): the routers as REST, the tools as MCP.
+
+    `background`: long-running loops (a schedule, a reaper) started with the app and cancelled on
+    shutdown; one that raises is restarted after a minute.
+    """
     mcp_http_app = mcp_app(mcp_server(name, tools), cfg.public_host) if tools else None
     telemetry.setup(cfg)
     db.init(cfg)
     audit.configure(name)
 
-    lifespan = (
-        _lifespan if mcp_http_app is None else combine_lifespans(_lifespan, mcp_http_app.lifespan)
-    )
+    own = _lifespan_with(background)
+    lifespan = own if mcp_http_app is None else combine_lifespans(own, mcp_http_app.lifespan)
     app = FastAPI(lifespan=lifespan, telemetry=_NO_NATIVE_TELEMETRY)
     app.add_middleware(_Instrument)
     for router in routers:
