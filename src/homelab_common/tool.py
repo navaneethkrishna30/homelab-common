@@ -48,10 +48,11 @@ def mcp_server(name: str, tools: Sequence[Callable[..., Awaitable[object]]]) -> 
 def mcp_app(server: FastMCP, public_host: str) -> StarletteWithLifespan:
     """The MCP endpoint as a Starlette app accepting only `public_host` as Host.
 
-    Mounting it at `/mcp` and combining its lifespan with the host app's is
-    `create_app`'s job, not this function's.
+    The endpoint answers at exactly `/mcp`: behind Caddy a redirect to `/mcp/` would lose the
+    service prefix and the scheme. Mounting it at the root and combining its lifespan with the
+    host app's is `create_app`'s job, not this function's.
     """
-    return server.http_app(path="/", allowed_hosts=[public_host])
+    return server.http_app(path="/mcp", allowed_hosts=[public_host])
 
 
 def _ensure_registered(tools: Sequence[Callable[..., Awaitable[object]]]) -> None:

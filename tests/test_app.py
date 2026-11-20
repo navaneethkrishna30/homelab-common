@@ -278,6 +278,20 @@ async def test_mcp_mounted_and_serving_beside_rest() -> None:
     assert [tool_info.name for tool_info in tools.tools] == ["mcp_greet"]
 
 
+async def test_mcp_path_without_a_trailing_slash_is_not_redirected() -> None:
+    """Behind Caddy a redirect would drop the service prefix, so /mcp must answer itself."""
+    app = create_app("apptest", app_settings(), routers=[], tools=[mcp_greet])
+    async with lifespan_running(app):
+        transport = httpx2.ASGITransport(app=app)
+        async with httpx2.AsyncClient(transport=transport, follow_redirects=False) as http:
+            response = await http.post(
+                "http://svc.fin-alkaline.ts.net/mcp",
+                headers={"accept": "application/json, text/event-stream"},
+                json={},
+            )
+    assert response.status_code not in (307, 308)
+
+
 @pytest.mark.integration
 class TestReadyMigrations:
     """Needs a real Postgres in HOMELAB_TEST_DATABASE_URL."""

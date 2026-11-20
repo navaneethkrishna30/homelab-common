@@ -94,7 +94,7 @@ def create_app(
         return Ready()
 
     if mcp_http_app is not None:
-        app.mount("/mcp", mcp_http_app)
+        app.mount("/", mcp_http_app)  # answers at exactly /mcp, never a redirect (see tool.mcp_app)
     return app
 
 
