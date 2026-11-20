@@ -12,6 +12,8 @@ x-service: &service
   read_only: true
   tmpfs:
     - /tmp
+  mem_limit: 512m # a leak is OOM-killed inside this cgroup and restarted, not left to hurt the host
+  oom_score_adj: 300 # under host memory pressure the kernel kills apps before the database
 
 services:
   api:

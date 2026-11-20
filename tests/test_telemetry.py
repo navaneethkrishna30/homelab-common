@@ -110,3 +110,11 @@ def test_setup_twice_raises() -> None:
     telemetry.setup(settings())
     with pytest.raises(RuntimeError, match="already called"):
         telemetry.setup(settings())
+
+
+def test_resource_instance_id_is_stable_across_restarts() -> None:
+    settings = CommonSettings.model_construct(service_name="tasks", host_name="veronica")
+    first, second = telemetry.build_resource(settings), telemetry.build_resource(settings)
+    assert first.attributes["service.instance.id"] == "tasks@veronica"
+    assert first.attributes == second.attributes
+    assert first.attributes["deployment.environment"] == "homelab"

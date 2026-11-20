@@ -411,6 +411,23 @@ _telemetry: _Telemetry | None = None
 _service_name: str | None = None
 
 
+def build_resource(settings: CommonSettings) -> Resource:
+    """The three resource labels, plus a stable instance id.
+
+    The SDK's default `service.instance.id` is a new UUID on every start, so every redeploy or
+    OOM restart would make a new Prometheus series set and a new Loki stream. There is one
+    container per service, so `service@host` is unique and stays the same across restarts.
+    """
+    return Resource.create(
+        {
+            "service.name": settings.service_name,
+            "service.instance.id": f"{settings.service_name}@{settings.host_name}",
+            "host.name": settings.host_name,
+            "deployment.environment": "homelab",
+        }
+    )
+
+
 def setup(settings: CommonSettings) -> None:
     """Install JSON logging and, when otlp_endpoint is set, OTLP export and instrumentors.
 
@@ -435,13 +452,7 @@ def setup(settings: CommonSettings) -> None:
         _telemetry = _Telemetry(json_handler=json_handler)
         return
 
-    resource = Resource.create(
-        {
-            "service.name": settings.service_name,
-            "host.name": settings.host_name,
-            "deployment.environment": "homelab",
-        }
-    )
+    resource = build_resource(settings)
     tracer_provider = TracerProvider(resource=resource)
     tracer_provider.add_span_processor(
         BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces"))

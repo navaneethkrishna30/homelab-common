@@ -7,6 +7,22 @@ services:
     network_mode: host # reachable at 127.0.0.1:5432 and 172.29.0.1:5432 (the homelab bridge gateway)
     user: "1000:1000"
     restart: always
+    stop_grace_period: 60s # the image stops with SIGINT (fast shutdown); give it time to checkpoint
+    oom_score_adj: -500 # under memory pressure the kernel kills the apps before the database
+    # Postgres only warns when a listen address does not exist yet, then serves loopback only while reporting
+    # healthy, and every service is cut off. Wait for the bridge address (a reboot can start this first), else
+    # exit so the restart policy tries again.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        for _ in $$(seq 120); do
+          grep -q -- '|-- 172.29.0.1$$' /proc/net/fib_trie && exec docker-entrypoint.sh "$$@"
+          sleep 1
+        done
+        echo "172.29.0.1 never appeared: is the homelab network up?" >&2
+        exit 1
+      - sh
     command:
       - postgres
       - -c
@@ -25,7 +41,7 @@ services:
       - ${HOMELAB_PG_DATA:-/home/veronica/.local/state/homelab-postgres}:/var/lib/postgresql/data:z
       - ./sql:/docker-entrypoint-initdb.d:ro,z
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres && pg_isready -h 172.29.0.1 -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -33,6 +49,7 @@ services:
   caddy:
     image: caddy:2.11
     restart: always
+    oom_score_adj: -200
     networks:
       - homelab
     ports:
@@ -64,6 +81,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    mem_limit: 256m # a leak is OOM-killed inside this cgroup and restarted, not left to hurt the host
+    oom_score_adj: 300
     depends_on:
       postgres:
         condition: service_healthy
