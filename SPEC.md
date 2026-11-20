@@ -382,3 +382,22 @@ Each step is one or more cards for `builder`, reviewed by Claude, merged to `dev
 - Audit pruning and platform-database backups: decided with machine-level backups.
 - Whether `jarvis_ro` sees more than `common.audit`: decided per service as each moves.
 - The `svc` Tailscale Service must be defined in the admin console by Nav before step 7.
+
+## 15. Decisions made while building v1 (2026-11-20, Claude, Nav asleep and out of the loop; revisit freely)
+- **Tool names** are the function names (`add_note`); Hermes prefixes the server. `mcp.tools` globs match those names.
+- **MCP path:** the endpoint answers at exactly `/mcp` (no redirect: behind Caddy a redirect to `/mcp/` loses the
+  service prefix). `CommonSettings.public_host` (default `svc.fin-alkaline.ts.net`) is the only host it accepts besides loopback.
+- **Role passwords:** every service role gets the service's own `DATABASE_PASSWORD` secret; deploy applies
+  `generated/databases.sql`, then `ALTER ROLE ... PASSWORD` from the decrypted secrets (psql quotes the value).
+  `jarvis_ro` uses the platform's `DATABASE_PASSWORD`. The platform's secrets decrypt to `/run/homelab/secrets/platform.env`
+  and reach compose through `--env-file`, so each container sees only what it needs (the `sql` tool never sees the superuser).
+- **The `sql` tool** lives in `platform/sql-tool/` (library + one tool, runs as `jarvis_ro`); its `service.yaml` is read by
+  the generator from the platform checkout, so it gets a Caddy site and an MCP entry like any service.
+- **Labels:** the resource attributes are `service.name`, `host.name` (the machine, from `HOST_NAME`, set by the generated
+  env) and `deployment.environment=homelab`; `service.instance.id` is `<service>@<host>` (stable: a random id makes a new
+  Prometheus series set and Loki stream on every restart).
+- **`veronica.yaml` has no `stacks` list:** nothing would read it; deploy.sh's `thirdparty` section keeps the existing
+  third-party stacks as they were. `secrets.sh` is not retired (that waits for a SOPS restore drill).
+- **Not built (no consumer yet):** the service-to-service HTTP client with the caller header and `traceparent`.
+- **Crash safety** (power cut, OOM): see `platform/README.md`; tested with `kill -9` of every process.
+
