@@ -50,7 +50,7 @@ select = ["E", "F", "I", "B", "UP", "ANN"]
 [tool.pyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
-include = ["src", "tests"]
+include = ["src", "tests", "platform/sql-tool"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

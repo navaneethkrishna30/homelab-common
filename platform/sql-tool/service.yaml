@@ -1,0 +1,15 @@
+apiVersion: homelab/v1
+name: sql
+title: SQL
+description: Read-only SQL over the homelab database
+repo: navaneethkrishna30/homelab-common
+run:
+  port: 8000
+  network: homelab
+  env: [DATABASE_PASSWORD]
+gateway: {path: /sql}
+mcp:
+  enabled: true
+  path: /mcp
+telemetry: {otlp: true}
+boot: {heal: true, units: []}

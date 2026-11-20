@@ -17,8 +17,8 @@ services:
       - timezone=UTC # Langfuse shares this server and requires UTC
       - -c
       - log_timezone=UTC
-    env_file: /run/homelab/secrets/platform.env # provides POSTGRES_PASSWORD
     environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run through deploy.sh, which passes --env-file the decrypted secrets}
       POSTGRES_USER: postgres
       POSTGRES_DB: homelab
     volumes:
@@ -44,6 +44,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  sql:
+    build:
+      context: ..
+      dockerfile: platform/sql-tool/Dockerfile
+    image: homelab/sql:local
+    pull_policy: build
+    container_name: sql
+    restart: always
+    networks:
+      - homelab
+    env_file: ${HOMELAB_DIR:-/home/veronica/homelab}/generated/env/sql.env
+    environment:
+      DATABASE_HOST: 172.29.0.1
+      DATABASE_SCHEMA: common
+      DATABASE_USER: jarvis_ro
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?run through deploy.sh, which passes --env-file the decrypted secrets}
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 networks:
   homelab:
