@@ -33,3 +33,9 @@ of them at once. What makes that safe:
 - The decrypted secrets in `/run/homelab/secrets` are gone after a reboot; running containers keep their environment, so
   nothing needs them until the next deploy (`./deploy.sh secrets` first).
 - A container that is `unhealthy` but running is not restarted by Docker; boot-check reports it (the `ServiceDown` alert).
+
+## Secrets
+`secrets.enc.env` at the repo root (SOPS + age, recipient in `.sops.yaml`; ciphertext only, safe in this public repo) holds
+`POSTGRES_PASSWORD` and `DATABASE_PASSWORD` (the `jarvis_ro` role's, used by the `sql` tool). deploy.sh decrypts it to
+`/run/homelab/secrets/platform.env`. Rotate one with `sops set secrets.enc.env '["DATABASE_PASSWORD"]' '"<new>"'`, then redeploy;
+deploy sets the role password from it. Changing `POSTGRES_PASSWORD` also needs `ALTER ROLE postgres PASSWORD ...` by hand once.
