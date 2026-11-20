@@ -55,8 +55,10 @@ later), the hub Activity page, per-service designs.
   defined once in the admin console). Global options: `servers { trusted_proxies static 172.29.0.1 }` (through the published port Caddy sees
   the bridge gateway as the peer, not 127.0.0.1; decided with Nav 2026-11-20 after testing).
   One file per service, generated (section 6). Existing `svc:<app>` serve entries stay until each app moves.
-- **Hermes** (on the host) reaches services through Caddy at `https://svc.fin-alkaline.ts.net/<name>/mcp`
-  (only the tailnet path carries Tailscale's signed `Tailscale-User-*` headers).
+- **Hermes** (on the host) reaches services through Caddy's loopback bind, `http://127.0.0.1:8480/<name>/mcp`. The
+  host of a Tailscale Service cannot resolve or reach the Service names it hosts (tested 2026-11-20), and a tagged
+  host carries no `Tailscale-User-*` headers anyway; the actor comes from `X-Homelab-Actor`. Other tailnet devices
+  use `https://svc.fin-alkaline.ts.net/<name>/`.
 - **Service to service:** directly over the bridge, `http://<name>:8000`; the library adds the caller header
   and `traceparent`.
 - **Alloy** (telemetry repo) joins the `homelab` bridge; services send OTLP to `http://alloy:4318`. No scrape
@@ -189,7 +191,7 @@ handle_path /tasks/* {
 ```
 
 Hermes MCP entries per service, default profile: `mcp_servers.<name>.url
-https://svc.fin-alkaline.ts.net/<name>/mcp`, `connect_timeout 30`, `tools.include` from `mcp.tools`;
+http://127.0.0.1:8480/<name>/mcp`, `connect_timeout 30`, `tools.include` from `mcp.tools`;
 profiles in `mcp.profiles` get the same server. Written only through `hermes config set` (never text-patched);
 applied without a gateway restart. Research: `t_854af8b7`.
 
