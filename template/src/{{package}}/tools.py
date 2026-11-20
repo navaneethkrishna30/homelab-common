@@ -1,6 +1,5 @@
-from sqlalchemy import select
-
 from homelab_common import audit, db, tool
+from sqlalchemy import select
 
 from .models import Note, NoteOut
 
