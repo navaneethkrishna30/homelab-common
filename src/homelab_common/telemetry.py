@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 import os
-import platform
 import re
 import sys
 import time
@@ -439,8 +438,8 @@ def setup(settings: CommonSettings) -> None:
     resource = Resource.create(
         {
             "service.name": settings.service_name,
-            "host.name": platform.node(),
-            "deployment.environment": "production",
+            "host.name": settings.host_name,
+            "deployment.environment": "homelab",
         }
     )
     tracer_provider = TracerProvider(resource=resource)

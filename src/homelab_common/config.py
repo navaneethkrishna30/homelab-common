@@ -1,6 +1,7 @@
 """Service configuration: pydantic-settings from config/config.yaml plus the environment."""
 
 import os
+import socket
 from typing import ClassVar
 from urllib.parse import quote
 
@@ -33,6 +34,8 @@ class CommonSettings(BaseSettings):
     database_user: str = Field(default=...)
     database_password: SecretStr = Field(default=...)
     db_pool_size: int = 5
+    # The machine it runs on (the host_name label); the generated env fragment sets HOST_NAME.
+    host_name: str = Field(default_factory=socket.gethostname)
     otlp_endpoint: str | None = Field(default=None, validation_alias="OTEL_EXPORTER_OTLP_ENDPOINT")
 
     @property

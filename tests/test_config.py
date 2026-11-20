@@ -65,3 +65,11 @@ def test_database_url_encodes_credentials(monkeypatch: pytest.MonkeyPatch, tmp_p
     monkeypatch.setenv("DATABASE_PASSWORD", "p@:/w")
     url = load_config(Settings).database_url
     assert url == "postgresql+asyncpg://tasks:p%40%3A%2Fw@172.29.0.1:5432/homelab"
+
+
+def test_host_name_comes_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    use_yaml(monkeypatch, tmp_path, "")
+    monkeypatch.setenv("HOST_NAME", "veronica")
+    assert load_config(Settings).host_name == "veronica"
