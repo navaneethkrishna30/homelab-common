@@ -15,3 +15,4 @@ Review for the parts no tool checks:
 - A function either always returns a value or never does.
 - A wire-format key that isn't snake_case (`apiVersion`) is a snake_case field with a Pydantic `alias`, never a mixedCase attribute.
 - No `cast` to get a type checker green; fix the type.
+- No raw SQL: every database read and write goes through SQLAlchemy ORM models and its query constructs (`select`, `insert`, `update`, `delete`), including third-party SQLite files and data changes in migrations. No SQL strings, `text()`, `exec_driver_sql`, `op.execute("...")` or `sqlite3`. Schema changes in migrations use Alembic ops. `just check` enforces it (ruff `S608` and a grep in `lint`).

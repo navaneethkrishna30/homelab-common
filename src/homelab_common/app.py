@@ -13,7 +13,7 @@ from fastmcp.utilities.lifespan import combine_lifespans
 from opentelemetry import propagate
 from opentelemetry.trace import SpanKind
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import column, select, table
 from starlette.applications import Starlette
 from starlette.datastructures import Headers
 from starlette.responses import JSONResponse
@@ -161,7 +161,9 @@ async def _current_revision(schema: str) -> str | None:
     try:
         async with db.session() as session:
             return (
-                await session.execute(text(f"SELECT version_num FROM {schema}.alembic_version"))
+                await session.execute(
+                    select(table("alembic_version", column("version_num"), schema=schema))
+                )
             ).scalar()
     except Exception:
         return None
