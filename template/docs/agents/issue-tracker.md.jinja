@@ -27,7 +27,7 @@ Shared by every repo:
 This repo's own ids: look them up once per session.
 
 ```sh
-P=$(curl -s -H … "$VK/projects" | jq '.[] | select(.title=="{{ name }}" and .parent_project_id==9) | .id')
+P=$(curl -s -H … "$VK/projects?s={{ name }}" | jq '.[] | select(.title=="{{ name }}" and .parent_project_id==9) | .id')
 V=$(curl -s -H … "$VK/projects/$P/views" | jq '.[] | select(.view_kind=="kanban") | .id')
 curl -s -H … "$VK/projects/$P/views/$V/buckets" | jq '.[] | {id, title}'   # To-Do (default), Doing, Done
 ```

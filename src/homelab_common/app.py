@@ -5,6 +5,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from http import HTTPStatus
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
@@ -26,7 +27,6 @@ from homelab_common.tool import mcp_app, mcp_server
 logger = logging.getLogger(__name__)
 
 _ALEMBIC_INI = Path("alembic.ini")
-_SERVER_ERROR = 500  # first HTTP 5xx status; also what an unhandled exception answers
 
 # FastAPI's native HTTP telemetry is off here: SPEC section 8 makes the
 # library's middleware the single owner of request spans and duration metrics,
@@ -221,9 +221,10 @@ class _Instrument:
                     logger.error("unhandled %s in %s %s", type(exc).__name__, method, path)
                     if status_code is None:
                         await JSONResponse(
-                            status_code=_SERVER_ERROR, content={"detail": "internal error"}
+                            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                            content={"detail": "internal error"},
                         )(scope, receive, send)
-                        status_code = _SERVER_ERROR
+                        status_code = HTTPStatus.INTERNAL_SERVER_ERROR
                     else:
                         raise
                 route = scope.get("route")
@@ -233,12 +234,12 @@ class _Instrument:
                     span.set_attribute("http.route", route_path)
         finally:
             context.current.reset(context_reset)
-            if error_type is None and (status_code or 0) >= _SERVER_ERROR:
+            if error_type is None and (status_code or 0) >= HTTPStatus.INTERNAL_SERVER_ERROR:
                 error_type = str(status_code)
             telemetry.metrics().record_http_server(
                 method,
                 route_path or "unmatched",
-                status_code or _SERVER_ERROR,
+                status_code or HTTPStatus.INTERNAL_SERVER_ERROR,
                 time.perf_counter() - started,
                 error_type,
             )

@@ -6,7 +6,15 @@ _exclude:
 _min_copier_version: "9.4"
 _tasks:
   - uv lock
-# managed: everything not listed below, overwritten by `copier update` (docs/agents/* included: no per-repo state).
+# AGENTS.md is repo-owned, so an update never touches it: services stamped before v0.1.9 get the agent-skills
+# section (the managed docs/agents/agents-section.md) appended once.
+_migrations:
+  - version: v0.1.9
+    when: "{{ _stage == 'after' }}"
+    command: >-
+      sh -c 'grep -q "^## Agent skills" AGENTS.md || { echo; cat docs/agents/agents-section.md; } >> AGENTS.md'
+# managed: everything not listed below; `copier update` 3-way merges them, so local edits conflict or survive.
+# Change them here, not in a service (docs/agents/* included: no per-repo state).
 # GLOSSARY.md and docs/adr/ are repo-owned but not stamped; /domain-modeling creates them when needed.
 # repo-owned: created once, never overwritten by `copier update` (SPEC section 9)
 _skip_if_exists:

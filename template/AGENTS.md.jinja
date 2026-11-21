@@ -5,9 +5,6 @@
 - Coding standards (read before changing code): [CODING_STANDARDS.md](CODING_STANDARDS.md).
 - Platform and library: [homelab-common](https://github.com/navaneethkrishna30/homelab-common) `SPEC.md`.
 - Branches: `main` released and tagged, `dev` integration, work branches from `dev`.
-- Domain terms: [GLOSSARY.md](GLOSSARY.md); use its words in code, tickets and commits. Platform terms (service,
-  gateway, schema, actor, audit, ...) are defined in homelab-common's [GLOSSARY.md](https://github.com/navaneethkrishna30/homelab-common/blob/main/GLOSSARY.md), not here.
-- Decisions already made: [docs/adr/](docs/adr/); read the ones touching your area, flag any you contradict.
 
 ## Layout
 `src/{{ package }}/`: `app.py` (create_app), `settings.py`, `models.py` (tables and API payloads), `api.py` (REST),
@@ -18,18 +15,4 @@
 - `check`: sync, lint, types, test, validate (service.yaml), secrets-guard
 - New migration: `uv run alembic revision --autogenerate -m "<what>"` (needs a database), review it, commit it.
 
-## Agent skills
-
-### Issue tracker
-
-Vikunja (service `tasks`), project `{{ name }}`; commits and PR bodies end with `Task: tasks#<id>`. See
-`docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-The five default roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) as Vikunja
-labels. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `GLOSSARY.md` (in place of `CONTEXT.md`) and `docs/adr/`. See `docs/agents/domain.md`.
+{% include 'docs/agents/agents-section.md.jinja' %}

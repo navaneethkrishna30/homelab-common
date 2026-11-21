@@ -8,7 +8,7 @@ sync:
 lint:
     uv run ruff check
     uv run ruff format --check
-    ! grep -rnE 'import sqlite3|[^a-z_]text\(|exec_driver_sql|executescript|\.executemany\(|op\.execute\("' src/ migrations/ || { echo 'raw SQL found (use SQLAlchemy ORM)' >&2; exit 1; }
+    uv run homelab-common check-sql src/ migrations/
 
 types:
     uv run pyright
