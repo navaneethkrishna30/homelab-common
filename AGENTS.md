@@ -2,6 +2,7 @@
 
 - Repo card: Cortex `entities/homelab-common`. Map: [SPEC.md](SPEC.md) (v1, final; ask rather than invent).
 - Code rules for every agent: Cortex `docs/skills/repo-hygiene` (read it; it is not copied here).
+- Coding standards (read before changing code): [CODING_STANDARDS.md](CODING_STANDARDS.md).
 - Branches: `main` released and tagged, `dev` integration, work branches from `dev`.
 
 ## Layout

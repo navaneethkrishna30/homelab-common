@@ -45,10 +45,11 @@ target-version = "py314"
 extend-exclude = ["SPEC.md", "template"]  # stamped services are checked as services (their own ruff)
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "ANN"]
+select = ["E", "W", "F", "I", "N", "B", "UP", "ANN"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
+enableTypeIgnoreComments = false
 pythonVersion = "3.14"
 include = ["src", "tests", "platform/sql-tool"]
 

@@ -56,7 +56,7 @@ class BootSpec(_StrictModel):
 
 
 class ServiceSpec(_StrictModel):
-    apiVersion: Literal["homelab/v1"]
+    api_version: Literal["homelab/v1"] = Field(alias="apiVersion")
     name: str = Field(pattern=r"^[a-z]([a-z0-9-]{0,38}[a-z0-9])?$")
     title: str
     description: str
