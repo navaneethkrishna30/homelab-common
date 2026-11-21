@@ -13,4 +13,7 @@ Values live in `secrets.enc.env` (SOPS, age; recipient in `.sops.yaml`). Add one
 `sops set secrets.enc.env '["DATABASE_PASSWORD"]' '"<value>"'`; names are listed in `service.yaml` (`run.env`).
 
 ## Release
-Merge `dev` into `main`, tag `main` (`vX.Y.Z`), then bump the tag for `{{ name }}` in the homelab repo's `veronica.yaml`.
+From a dev machine, with this checkout and the homelab checkout side by side, run
+`tools/release.sh {{ name }} [--minor]` from the homelab repo: it merges `dev` into `main`,
+waits for CI on `main` to pass, tags, pins the tag in `veronica.yaml` and deploys. A Version
+bump on `dev` must be followed by `uv lock`; the tool checks that.
