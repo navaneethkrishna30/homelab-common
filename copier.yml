@@ -39,7 +39,7 @@ age_recipient:
 library_tag:
   type: str
   help: homelab-common tag this service installs (the template's own version)
-  default: v0.1.7
+  default: v0.1.8
 package:
   type: str
   default: "{{ name | replace('-', '_') }}"
