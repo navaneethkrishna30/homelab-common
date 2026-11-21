@@ -32,8 +32,8 @@ V=$(curl -s -H … "$VK/projects/$P/views" | jq '.[] | select(.view_kind=="kanba
 curl -s -H … "$VK/projects/$P/views/$V/buckets" | jq '.[] | {id, title}'   # To-Do (default), Doing, Done
 ```
 
-The Done bucket is the kanban view's `done_bucket_id`. These three lookups were written from the verified
-ids, not yet run as-is; if `view_kind` does not match, list the views and pick the one titled `Kanban`.
+The Done bucket is the kanban view's `done_bucket_id` (`view_kind` and `done_bucket_id` checked against
+Vikunja v2.8.0: mifitness's view 64 has done bucket 74).
 
 If the project is missing, create it: `PUT $VK/projects {"title":"{{ name }}","parent_project_id":9}`; its views and
 buckets come with it.
