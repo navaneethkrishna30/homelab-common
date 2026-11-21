@@ -1,7 +1,7 @@
 ## Python
 
 Base: [PEP 8](https://peps.python.org/pep-0008/). Its mechanical part is enforced, so review never repeats it:
-ruff (`E W F I N B UP ANN`, `ruff format`) and pyright strict with `# type: ignore` disabled. `just check` runs both.
+ruff (`E W F I N B UP ANN C90 C416 PLR0912 PLR0915 PLR2004 S608 BLE`, mccabe max-complexity = 10, `ruff format`) and pyright strict with `# type: ignore` disabled. `just check` runs both.
 
 Deviation from PEP 8: line length is 100 (PEP 8 allows up to 99 by team agreement).
 
