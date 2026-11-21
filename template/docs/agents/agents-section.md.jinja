@@ -1,0 +1,19 @@
+## Agent skills
+
+### Issue tracker
+
+Vikunja (service `tasks`), project `{{ name }}`; commits and PR bodies end with `Task: tasks#<id>`. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) as Vikunja
+labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` (in place of `CONTEXT.md`) and `docs/adr/`, both created by `/domain-modeling` once a
+term or decision is settled. Use the glossary's words in code, tickets and commits; platform terms (service, gateway,
+schema, actor, audit, ...) are defined in homelab-common's
+[GLOSSARY.md](https://github.com/navaneethkrishna30/homelab-common/blob/main/GLOSSARY.md), not here. Read the ADRs
+touching your area and flag any you contradict. See `docs/agents/domain.md`.
