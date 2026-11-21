@@ -8,6 +8,7 @@ sync:
 lint:
     uv run ruff check
     uv run ruff format --check
+    uv run homelab-common check-sql src/
 
 types:
     uv run pyright

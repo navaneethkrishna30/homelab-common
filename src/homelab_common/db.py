@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from sqlalchemy import text
+from sqlalchemy import literal, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -71,7 +71,7 @@ async def ping() -> bool:
         return False
     try:
         async with _engine.connect() as connection:
-            await connection.execute(text("SELECT 1"))
+            await connection.execute(select(literal(1)))
     except Exception:
         return False
     return True

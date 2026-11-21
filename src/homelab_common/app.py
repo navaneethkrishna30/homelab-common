@@ -5,6 +5,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from http import HTTPStatus
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
@@ -13,7 +14,7 @@ from fastmcp.utilities.lifespan import combine_lifespans
 from opentelemetry import propagate
 from opentelemetry.trace import SpanKind
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import column, select, table
 from starlette.applications import Starlette
 from starlette.datastructures import Headers
 from starlette.responses import JSONResponse
@@ -160,7 +161,9 @@ async def _current_revision(schema: str) -> str | None:
     try:
         async with db.session() as session:
             return (
-                await session.execute(text(f"SELECT version_num FROM {schema}.alembic_version"))
+                await session.execute(
+                    select(table("alembic_version", column("version_num"), schema=schema))
+                )
             ).scalar()
     except Exception:
         return None
@@ -217,10 +220,11 @@ class _Instrument:
                     error_type = type(exc).__name__
                     logger.error("unhandled %s in %s %s", type(exc).__name__, method, path)
                     if status_code is None:
-                        await JSONResponse(status_code=500, content={"detail": "internal error"})(
-                            scope, receive, send
-                        )
-                        status_code = 500
+                        await JSONResponse(
+                            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                            content={"detail": "internal error"},
+                        )(scope, receive, send)
+                        status_code = HTTPStatus.INTERNAL_SERVER_ERROR
                     else:
                         raise
                 route = scope.get("route")
@@ -230,12 +234,12 @@ class _Instrument:
                     span.set_attribute("http.route", route_path)
         finally:
             context.current.reset(context_reset)
-            if error_type is None and (status_code or 0) >= 500:
+            if error_type is None and (status_code or 0) >= HTTPStatus.INTERNAL_SERVER_ERROR:
                 error_type = str(status_code)
             telemetry.metrics().record_http_server(
                 method,
                 route_path or "unmatched",
-                status_code or 500,
+                status_code or HTTPStatus.INTERNAL_SERVER_ERROR,
                 time.perf_counter() - started,
                 error_type,
             )
