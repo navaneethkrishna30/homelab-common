@@ -7,7 +7,7 @@
 ## Layout
 - `src/homelab_common/`: the library (`create_app`, `load_config`, `db`, `audit`, `tool`, CLI)
 - `template/`: the copier service template
-- `platform/`: the platform compose (`platform/compose.yaml`: Postgres, Caddy, `sql` tool, Langfuse)
+- `platform/`: the platform compose (`platform/compose.yaml`: Postgres, Caddy, `sql` tool)
 - `tests/`: flat pytest suite
 - Integration tests (`pytest -m integration`) need `HOMELAB_TEST_DATABASE_URL` and the SQL in `platform/sql/` applied:
   run them on fedora against a throwaway `postgres:17.12` (`docker --context fedora`, tunnel with `ssh -N -L`).

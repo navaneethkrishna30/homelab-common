@@ -30,7 +30,7 @@ services:
       - -c
       - port=5432
       - -c
-      - timezone=UTC # Langfuse shares this server and requires UTC
+      - timezone=UTC
       - -c
       - log_timezone=UTC
     environment:

@@ -14,7 +14,7 @@ https://claude.ai/artifact/QS4FYUGnJE3Pjp5nwq3Pym (not readable by agents; this 
 
 - a **Python library** (`homelab_common`) every service installs;
 - a **copier template** that creates a new service repo;
-- the **platform compose**: Postgres, the Caddy gateway, the read-only `sql` MCP tool, Langfuse.
+- the **platform compose**: Postgres, the Caddy gateway, the read-only `sql` MCP tool.
 
 v1 is done when a service stamped from the template runs end to end on veronica: deployed by `deploy.sh` from
 a tag, migrated, reachable at `https://svc.fin-alkaline.ts.net/<name>/` (REST) and `/<name>/mcp` (MCP),
@@ -43,8 +43,7 @@ later), the hub Activity page, per-service designs.
 - **One Docker bridge network `homelab`**, external, subnet `172.29.0.0/24`, gateway `172.29.0.1`.
 - **Postgres 17 runs on the host network**, data `~/.local/state/homelab-postgres`, listening on
   `127.0.0.1:5432` and `172.29.0.1:5432`. Containers reach it at `172.29.0.1:5432`, never `127.0.0.1`.
-- Databases: `homelab` (one schema per service, each owned by that service's role) and `langfuse` (Langfuse
-  uses `public` and migrates itself).
+- Database: `homelab` (one schema per service, each owned by that service's role).
 - Roles: one per service (owns its schema; `INSERT` + `SELECT` on `common.audit`, nothing else outside its
   schema); `jarvis_ro`, read-only, in v1 allowed `SELECT` on `common.audit` only. The platform's init SQL
   creates roles, schemas and `common`; the generator emits role/schema lines per service.
@@ -65,12 +64,9 @@ later), the hub Activity page, per-service designs.
   config is generated.
 - **`sql` tool:** a small MCP server in the platform compose, connected as `jarvis_ro`: one statement per
   call, statement timeout 10 s, row cap 200. Published through Caddy like a service.
-- **Langfuse v3** in the platform compose (compose profile `observability`, stoppable alone): web, worker,
-  ClickHouse, Valkey, MinIO; no bundled Postgres, `DATABASE_URL` points at `172.29.0.1:5432/langfuse`.
-  Measured idle cost: about 0.45 GiB for the infra containers, budget 2 to 3 GiB for the whole stack.
-  Hermes gets the official `langfuse` plugin (`HERMES_LANGFUSE_PUBLIC_KEY`, `HERMES_LANGFUSE_SECRET_KEY`,
-  `HERMES_LANGFUSE_BASE_URL` = the Caddy route), beside the existing `jarvis-telemetry` plugin until Langfuse
-  is proven to cover it. Research: card `t_259d706b`, finding posted on `t_4d7363a2`.
+- **Hermes telemetry** is not part of the platform: the community `hermes_otel` plugin sends every turn to the
+  telemetry stack (Tempo, Loki, Prometheus) through Alloy; set up in the homelab repo (`jarvis/hermes_otel.yaml`).
+  Langfuse was dropped on 2026-11-21 (about 1.9 GiB idle in a test).
 
 ## 4. Library v1 public API
 
@@ -374,7 +370,6 @@ Each step is one or more cards for `builder`, reviewed by Claude, merged to `dev
 6. Alloy changes (after the dashboard check).
 7. End to end: deploy `hello` from a tag, reach it through `svc`, call its MCP tool from Hermes, see its audit
    row and its trace. Then delete `hello` and move to `tasks`.
-8. Langfuse in the platform compose and the Hermes plugin (board card "2. Langfuse + Hermes plugin").
 
 ## 14. Open items
 
