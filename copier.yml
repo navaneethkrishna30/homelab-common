@@ -6,6 +6,8 @@ _exclude:
 _min_copier_version: "9.4"
 _tasks:
   - uv lock
+# managed: everything not listed below, overwritten by `copier update` (docs/agents/* included: no per-repo state).
+# GLOSSARY.md and docs/adr/ are repo-owned but not stamped; /domain-modeling creates them when needed.
 # repo-owned: created once, never overwritten by `copier update` (SPEC section 9)
 _skip_if_exists:
   - service.yaml

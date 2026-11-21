@@ -1,0 +1,106 @@
+# Issue tracker: Vikunja (service `tasks`)
+
+Issues, specs and tickets for this repo live in Vikunja, project **`{{ name }}`** (one project per repo, named after
+the repo, a child of project `Homelab`, which is shared read-write with team `homelab`).
+
+- Web: https://svc.fin-alkaline.ts.net/tasks/
+- REST: `VK=https://svc.fin-alkaline.ts.net/tasks/api/v1` (on veronica: `http://127.0.0.1:8480/tasks/api/v1`)
+- MCP: `https://svc.fin-alkaline.ts.net/tasks/api/v2/mcp` (needs the same bearer token)
+- Version: Vikunja v2.8.0 (`GET $VK/info`)
+- Auth: `-H "Authorization: Bearer $VIKUNJA_TOKEN"`. Agents act as `fedora`; each actor's token is `TOKEN_<USER>` in
+  the vikunja repo's `secrets.enc.env` (SOPS; decrypt on veronica, where the age key lives).
+
+Every call below was run once against the live API on 2026-11-21.
+
+Below, `-H` stands for `-H "Authorization: Bearer $VIKUNJA_TOKEN" -H 'Content-Type: application/json'`.
+
+## Ids
+
+Shared by every repo:
+
+| Thing | Id |
+|---|---|
+| project `Homelab` (parent of every repo's project) | 9 |
+| team `homelab` | 1 (shared on project 9; children inherit) |
+| labels | 8 needs-triage, 9 needs-info, 10 ready-for-agent, 11 ready-for-human, 12 wontfix |
+
+This repo's own ids: look them up once per session.
+
+```sh
+P=$(curl -s -H … "$VK/projects" | jq '.[] | select(.title=="{{ name }}" and .parent_project_id==9) | .id')
+V=$(curl -s -H … "$VK/projects/$P/views" | jq '.[] | select(.view_kind=="kanban") | .id')
+curl -s -H … "$VK/projects/$P/views/$V/buckets" | jq '.[] | {id, title}'   # To-Do (default), Doing, Done
+```
+
+The Done bucket is the kanban view's `done_bucket_id`. These three lookups were written from the verified
+ids, not yet run as-is; if `view_kind` does not match, list the views and pick the one titled `Kanban`.
+
+If the project is missing, create it: `PUT $VK/projects {"title":"{{ name }}","parent_project_id":9}`; its views and
+buckets come with it.
+
+## Task ids and code links
+
+`<id>` is the task's **global id** (`.id`), not the per-project `index` (shown as `identifier` `#N`). Commits and PR
+bodies end with a line `Task: tasks#<id>`; `code-review` finds the spec by reading that line, fetching the task and,
+if it is a ticket, its `related_tasks.parenttask`.
+
+## When a skill says "publish to the issue tracker"
+
+```sh
+curl -s -X PUT -H … "$VK/projects/$P/tasks" -d '{"title":"<title>","description":"<body>"}' | jq '.id'
+```
+
+### Specs and tickets
+
+A **spec** is a parent task; each **ticket** is its own task, made a subtask of the spec. Vikunja adds the inverse
+`parenttask` on the ticket.
+
+```sh
+curl -s -X PUT -H … "$VK/tasks/<spec>/relations" -d '{"other_task_id":<ticket>,"relation_kind":"subtask"}'
+```
+
+### Blocking
+
+Ticket B blocked by ticket A (A then shows `blocking: [B]`). A ticket is unblocked when every task in its
+`related_tasks.blocked` is `done`.
+
+```sh
+curl -s -X PUT -H … "$VK/tasks/<B>/relations" -d '{"other_task_id":<A>,"relation_kind":"blocked"}'
+# undo: DELETE $VK/tasks/<B>/relations/blocked/<A>
+```
+
+## Labels (triage roles)
+
+Ids are in the table above; strings in `triage-labels.md`. Labels are global; look one up with
+`GET $VK/labels?s=<title>`, create a missing one with `PUT $VK/labels {"title":"<title>"}`.
+
+```sh
+curl -s -X PUT -H … "$VK/tasks/<id>/labels" -d '{"label_id":10}'
+# remove: DELETE $VK/tasks/<id>/labels/<label>
+```
+
+## Status (kanban buckets)
+
+```sh
+curl -s -X POST -H … "$VK/projects/$P/views/$V/buckets/<bucket>/tasks" -d '{"task_id":<id>}'
+```
+
+Moving into the Done bucket sets `done: true`. Plain `GET /tasks/<id>` always reports `bucket_id: 0`; read the
+bucket with `GET $VK/tasks/<id>?expand=buckets` or `GET $VK/projects/$P/views/$V/tasks` (tasks grouped by bucket).
+
+## Comments
+
+```sh
+curl -s -X PUT -H … "$VK/tasks/<id>/comments" -d '{"comment":"<text>"}'
+curl -s -H … "$VK/tasks/<id>/comments"
+```
+
+## When a skill says "fetch the relevant ticket"
+
+```sh
+curl -s -H … "$VK/tasks/<id>?expand=buckets"
+curl -s -H … "$VK/projects/$P/tasks/by-index/<N>"   # by per-project index (#N)
+```
+
+Fields: `title`, `description`, `done`, `labels[].title`, `buckets[].title`,
+`related_tasks.{subtask,parenttask,blocked,blocking}[].id`.
