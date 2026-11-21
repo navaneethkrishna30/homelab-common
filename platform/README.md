@@ -1,15 +1,13 @@
 # platform
 
-`compose.yaml` is the platform stack (project `homelab-platform`); more services (Caddy, the `sql` tool, Langfuse)
-join it in later steps.
+`compose.yaml` is the platform stack (project `homelab-platform`): Postgres, Caddy and the `sql` tool.
 
 - **postgres**: Postgres 17 on the host network, listening on `127.0.0.1:5432` and `172.29.0.1:5432`. Data lives in
   `~/.local/state/homelab-postgres`; set `HOMELAB_PG_DATA` to use another directory (test stacks). The superuser
   password is `POSTGRES_PASSWORD`, passed by deploy.sh with `docker compose --env-file /run/homelab/secrets/platform.env`
   (decrypted from `secrets.enc.env`); the same file carries `DATABASE_PASSWORD`, the password of the `jarvis_ro` role.
 - **SQL** (`sql/`): mounted into `docker-entrypoint-initdb.d`, so Postgres runs it once on an empty data directory.
-  Every file is idempotent because deploy applies the same files again on each run: `00-databases.sql` creates the
-  `langfuse` database, `10-common.sql` creates the `common` schema, `common.audit` and the read-only role `jarvis_ro`.
+  Every file is idempotent because deploy applies the same files again on each run: `10-common.sql` creates the `common` schema, `common.audit` and the read-only role `jarvis_ro`.
   Per-service roles and schemas are generated per service by the homelab repo, not written here.
 - **caddy**: the gateway, `caddy:2.11`, on the `homelab` bridge with the platform's only published port
   `127.0.0.1:8480`. It reads `/etc/caddy` from `~/homelab/caddy` (set `HOMELAB_DIR` to use another directory): the
